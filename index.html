@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobile Security Scanner</title>
+    <style>
+        /* ── RESET & BASE ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #008080;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── SCREEN CONTAINERS ── */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #008080;
+        }
+        .screen.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── WINDOW COMMON (STRICT WIN95 UI) ── */
+        .window {
+            background: #c0c0c0;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            min-width: 380px;
+            max-width: 480px;
+            width: 90%;
+            position: relative;
+        }
+
+        .window-header {
+            background: #000080;
+            padding: 3px 4px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .window-header .win-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 2px;
+        }
+
+        .window-header .win-controls span {
+            display: inline-block;
+            width: 16px;
+            height: 14px;
+            background: #c0c0c0;
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #000000;
+            border-bottom: 1px solid #000000;
+            text-align: center;
+            line-height: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .window-header .win-controls span:active {
+            border-top: 1px solid #000000;
+            border-left: 1px solid #000000;
+            border-right: 1px solid #ffffff;
+            border-bottom: 1px solid #ffffff;
+        }
+
+        .window-body {
+            padding: 16px;
+            background: #c0c0c0;
+            text-align: center;
+        }
+
+        /* ── FORM ELEMENTS (RETRO STYLE) ── */
+        .input-group {
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: #000;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 4px 6px;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            background: #ffffff;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            outline: none;
+            color: #000;
+        }
+
+        .btn {
+            background: #c0c0c0;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+            cursor: pointer;
+            margin-top: 8px;
+            outline: 1px solid #000;
+            outline-offset: -5px;
+            font-weight: bold;
+        }
+
+        .btn:active {
+            border-top: 2px solid #000000;
+            border-left: 2px solid #000000;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            outline-offset: -4px;
+        }
+
+        .error-msg {
+            color: #800000;
+            font-size: 12px;
+            margin-top: 10px;
+            min-height: 15px;
+            font-weight: bold;
+        }
+
+        /* ── MAIN SCREEN ── */
+        .main-window {
+            width: 100%;
+            max-width: 600px;
+            min-height: 350px;
+        }
+
+        .panel {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .panel p {
+            font-size: 12px;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row input {
+            flex: 1;
+        }
+
+        .status-area {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            padding: 10px;
+            font-size: 12px;
+            color: #000;
+            text-align: left;
+            background: #ffffff;
+            min-height: 60px;
+        }
+
+        .progress-wrap {
+            width: 100%;
+            height: 18px;
+            background: #c0c0c0;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            margin-top: 6px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #000080;
+        }
+
+        /* ── COMMAND PROMPT SCREEN (NEW) ── */
+        #flicker-screen {
+            background: #000000;
+            color: #cccccc;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 10px;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .cmd-line {
+            font-size: 14px;
+            line-height: 1.3;
+            text-align: left;
+            width: 100%;
+        }
+
+        .cmd-warning {
+            color: #ff5555;
+            font-weight: bold;
+        }
+
+        /* ── HACKED SCREEN ── */
+        #hacked-screen {
+            background: #000000;
+        }
+
+        .hacked-window {
+            background: #000000;
+            border: 2px solid #ff0000;
+            width: 100%;
+            max-width: 650px;
+            padding: 20px;
+            text-align: center;
+            color: #ff0000;
+        }
+
+        .hacked-window h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .hacked-details {
+            border: 1px solid #ff0000;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 13px;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .hacked-details span {
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .btn-danger {
+            background: #000000;
+            color: #ff0000;
+            border: 2px solid #ff0000;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-danger:active {
+            background: #ff0000;
+            color: #000000;
+        }
+
+        /* ── PAYMENT SCREEN ── */
+        .payment-window {
+            max-width: 500px;
+        }
+
+        .payment-box {
+            background: #ffffff;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            padding: 12px;
+            text-align: left;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+
+        .payment-box h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-decoration: underline;
+            color: #800000;
+            font-weight: bold;
+        }
+
+        .address-field {
+            width: 100%;
+            background: #c0c0c0;
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            color: #000;
+        }
+
+        .amt-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #000;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 500px) {
+            .input-row { flex-direction: column; align-items: stretch; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="password-screen" class="screen active">
+        <div class="window">
+            <div class="window-header">
+                <span>C:\WINDOWS\SYSTEM32\LOGIN.EXE</span>
+                <div class="win-controls">
+                    <span>-</span>
+                    <span>X</span>
+                </div>
+            </div>
+            <div class="window-body">
+                <h3>SYSTEM LOGIN</h3>
+                <div class="input-group">
+                    <label>PASSWORD:</label>
+                    <input type="password" id="passwordInput" placeholder="TYPE HERE..." autofocus />
+                </div>
+                <button class="btn" id="openBtn">LOGIN</button>
+                <div class="error-msg" id="passwordError"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-screen" class="screen">
+        <div class="window main-window">
+            <div class="window-header">
+                <span>MOBILE SECURITY SCANNER v3.1</span>
+                <div class="win-controls">
+                    <span>-</span>
+                    <span>X</span>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="panel">
+                    <p>
+                        <strong>ENTER NUMBER FOR SECURITY AUDIT</strong><br>
+                        Enter any 10-digit Indian Mobile Number below. The system will connect to the device and scan for vulnerabilities, malware, and data leaks.
+                    </p>
+                    <div class="input-row">
+                        <input type="text" id="deviceInput" placeholder="+91" />
+                        <button class="btn" id="scanBtn">START SCAN</button>
+                    </div>
+                </div>
+
+                <div class="status-area" id="statusArea">
+                    <div id="statusText">Waiting for device number...</div>
+                    <div class="progress-wrap" id="progressWrap" style="display:none;">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div id="progressLabel" style="display:none; margin-top:5px; font-weight:bold;">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="flicker-screen" class="screen">
+        </div>
+
+    <div id="hacked-screen" class="screen">
+        <div class="hacked-window">
+            <h1>ALERT!</h1>
+            <h3>THIS DEVICE IS NOW HACKED</h3>
+            <div class="hacked-details">
+                <div>>> TARGET DEVICE: <span id="hackedDevice">NULL</span></div>
+                <br>
+                <div>>> STOLEN DATA:</div>
+                <div>   - All WhatsApp Chats and Photos</div>
+                <div>   - Device Gallery and Secret Folders</div>
+                <div>   - Bank OTPs and Messages</div>
+                <div>   - UPI PINs and Passwords</div>
+                <div>   - Full Contact List</div>
+                <br>
+                <div>>> LIVE TRACKING ON:</div>
+                <div>   - Microphone is currently recording.</div>
+                <div>   - Camera is watching.</div>
+                <br>
+                <div>>> WHAT HAPPENS NEXT:</div>
+                <div>   All stolen photos and chats will be sent to your family and friends in 24 hours.</div>
+            </div>
+            <button class="btn-danger" id="continuePayBtn">PAY TO STOP HACK</button>
+        </div>
+    </div>
+
+    <div id="payment-screen" class="screen">
+        <div class="window payment-window">
+            <div class="window-header">
+                <span>PAYMENT REQUIRED</span>
+                <div class="win-controls">
+                    <span>-</span>
+                    <span>X</span>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="payment-box">
+                    <h3>YOUR DEVICE IS LOCKED</h3>
+                    <p>All your private data, WhatsApp chats, and banking OTPs have been stolen and locked by us. If you do not pay money right now, everything will be leaked to the public.</p>
+                    
+                    <p style="margin-top: 15px;">Send Bitcoin to this address immediately:</p>
+                    <div class="address-field">
+                        1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+                    </div>
+
+                    <div class="amt-row">
+                        <div>PAY THIS AMOUNT: 0.50 BTC</div>
+                        <div>TIME LEFT: 23:59:59</div>
+                    </div>
+                </div>
+                <button class="btn" id="verifyPaymentBtn">I HAVE PAID</button>
+                <div id="paymentStatus" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // DOM refs
+            const passwordScreen = document.getElementById('password-screen');
+            const mainScreen = document.getElementById('main-screen');
+            const flickerScreen = document.getElementById('flicker-screen');
+            const hackedScreen = document.getElementById('hacked-screen');
+            const paymentScreen = document.getElementById('payment-screen');
+
+            const passwordInput = document.getElementById('passwordInput');
+            const openBtn = document.getElementById('openBtn');
+            const passwordError = document.getElementById('passwordError');
+
+            const deviceInput = document.getElementById('deviceInput');
+            const scanBtn = document.getElementById('scanBtn');
+            const statusText = document.getElementById('statusText');
+            const progressWrap = document.getElementById('progressWrap');
+            const progressBar = document.getElementById('progressBar');
+            const progressLabel = document.getElementById('progressLabel');
+
+            const hackedDevice = document.getElementById('hackedDevice');
+            const continuePayBtn = document.getElementById('continuePayBtn');
+            
+            const verifyPaymentBtn = document.getElementById('verifyPaymentBtn');
+            const paymentStatus = document.getElementById('paymentStatus');
+
+            let isScanning = false;
+            let progressTimer = null;
+            let cmdTimer = null;
+            let vibrationInterval = null;
+
+            // Screen switcher
+            function showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+            }
+
+            // Vibration controls
+            function stopVibration() {
+                if (vibrationInterval) {
+                    clearInterval(vibrationInterval);
+                    vibrationInterval = null;
+                }
+                if (navigator.vibrate) navigator.vibrate(0);
+            }
+
+            function startVibration() {
+                stopVibration();
+                if (!navigator.vibrate) return;
+                vibrationInterval = setInterval(() => {
+                    navigator.vibrate(200);
+                }, 2000);
+                navigator.vibrate(200);
+            }
+
+            // Reset mechanism
+            function resetAll() {
+                stopVibration();
+                if (progressTimer) clearInterval(progressTimer);
+                if (cmdTimer) clearInterval(cmdTimer);
+                isScanning = false;
+                
+                progressWrap.style.display = 'none';
+                progressLabel.style.display = 'none';
+                progressBar.style.width = '0%';
+                statusText.innerHTML = 'Waiting for device number...';
+                deviceInput.value = '';
+                passwordInput.value = '';
+                passwordError.textContent = '';
+                paymentStatus.textContent = '';
+                flickerScreen.innerHTML = '';
+                
+                showScreen('password-screen');
+                setTimeout(() => passwordInput.focus(), 100);
+            }
+
+            // Attach reset to all "X" buttons
+            document.querySelectorAll('.win-controls span:last-child').forEach(btn => {
+                btn.addEventListener('click', resetAll);
+            });
+
+            // Password logic
+            function handlePassword() {
+                const pwd = passwordInput.value.trim();
+                // Password set to "1234"
+                if (pwd !== '1234') {
+                    passwordError.textContent = 'WRONG PASSWORD';
+                    passwordInput.focus();
+                    return;
+                }
+                passwordError.textContent = '';
+                openBtn.textContent = 'PLEASE WAIT...';
+                openBtn.disabled = true;
+                setTimeout(() => {
+                    openBtn.textContent = 'LOGIN';
+                    openBtn.disabled = false;
+                    showScreen('main-screen');
+                    deviceInput.value = '+91 '; // pre-fill Indian standard
+                    setTimeout(() => {
+                        deviceInput.focus();
+                        const len = deviceInput.value.length;
+                        deviceInput.setSelectionRange(len, len);
+                    }, 200);
+                }, 500);
+            }
+
+            openBtn.addEventListener('click', handlePassword);
+            passwordInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handlePassword();
+            });
+
+            // Auto-format Indian number slightly
+            deviceInput.addEventListener('input', function(e) {
+                if (!this.value.startsWith('+91')) {
+                    this.value = '+91 ' + this.value.replace(/[^0-9]/g, '');
+                }
+            });
+
+            // Execute Scan
+            function startScan() {
+                if (isScanning) return;
+                
+                // Keep only numbers to check length
+                const rawNum = deviceInput.value.replace(/\D/g, '');
+                
+                // +91 plus 10 digits = 12 digits minimum
+                if (rawNum.length < 12) {
+                    statusText.innerHTML = 'ERROR: ENTER A REAL INDIAN MOBILE NUMBER.';
+                    return;
+                }
+
+                isScanning = true;
+                scanBtn.disabled = true;
+
+                statusText.innerHTML = 'Connecting to device network...';
+                progressWrap.style.display = 'block';
+                progressLabel.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                let progress = 0;
+                
+                progressTimer = setInterval(() => {
+                    progress += Math.floor(Math.random() * 5) + 2;
+                    if (progress > 100) progress = 100;
+                    
+                    progressBar.style.width = progress + '%';
+                    progressLabel.textContent = progress + '%';
+
+                    if (progress > 10 && progress < 30) statusText.innerHTML = 'Scanning for security holes...';
+                    if (progress >= 30 && progress < 60) statusText.innerHTML = 'Checking WhatsApp for malware...';
+                    if (progress >= 60 && progress < 85) statusText.innerHTML = 'Verifying UPI and banking safety...';
+                    if (progress >= 85) statusText.innerHTML = 'Creating final security report...';
+
+                    if (progress >= 100) {
+                        clearInterval(progressTimer);
+                        setTimeout(executeCommandPrompt, 500);
+                    }
+                }, 150);
+            }
+
+            scanBtn.addEventListener('click', startScan);
+            deviceInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') startScan();
+            });
+
+            // Command Prompt Screen Logic
+            function executeCommandPrompt() {
+                showScreen('flicker-screen');
+                flickerScreen.innerHTML = ''; // Clear old text
+                
+                // Initial Windows Command Prompt Header - transitioning from benign to malicious
+                const intro = document.createElement('div');
+                intro.className = 'cmd-line';
+                intro.innerHTML = 'Microsoft Windows [Version 4.10.1998]<br>(C) Copyright Microsoft Corp 1981-1998.<br><br>C:\\WINDOWS\\system32>audit.exe -target ' + deviceInput.value + '<br>Starting security scan...<br>[OK] Connection established.<br><span class="cmd-warning">[WARNING] CRITICAL VULNERABILITY DETECTED</span><br>[EXPLOIT] Injecting root payload...<br>[SUCCESS] Root access granted.<br><br>';
+                flickerScreen.appendChild(intro);
+
+                const files = [
+                    'WhatsApp/Databases/msgstore.db.crypt14',
+                    'WhatsApp/Media/WhatsApp Images/',
+                    'DCIM/Camera/photo_dump.zip',
+                    'Bank_OTP_Logs.txt',
+                    'UPI_Pins.dat',
+                    'Contacts.vcf',
+                    'Call_Recordings.mp3',
+                    'Browser_History.txt',
+                    'Instagram_Passwords.dat',
+                    'Hidden_Folder_Unlock.key'
+                ];
+
+                // Add random lines of stolen data
+                cmdTimer = setInterval(() => {
+                    const target = files[Math.floor(Math.random() * files.length)];
+                    const size = Math.floor(Math.random() * 5000) + 100;
+                    
+                    const line = document.createElement('div');
+                    line.className = 'cmd-line cmd-warning';
+                    line.textContent = `[STEALING] Downloading ${target} ... ${size} KB copied.`;
+                    
+                    flickerScreen.appendChild(line);
+                    
+                    // Keep DOM light, remove old lines (except intro)
+                    if (flickerScreen.children.length > 25) {
+                        flickerScreen.removeChild(flickerScreen.children[1]);
+                    }
+                    
+                    // Auto-scroll to bottom
+                    flickerScreen.scrollTop = flickerScreen.scrollHeight;
+                }, 200); // New line every 200ms
+
+                // Stop CMD and switch to hacked screen after EXACTLY 8 seconds
+                setTimeout(() => {
+                    clearInterval(cmdTimer);
+                    triggerHackedScreen();
+                }, 8000);
+            }
+
+            // Hacked Screen
+            function triggerHackedScreen() {
+                const target = deviceInput.value.trim();
+                hackedDevice.textContent = target;
+                showScreen('hacked-screen');
+                startVibration();
+
+                isScanning = false;
+                scanBtn.disabled = false;
+                progressWrap.style.display = 'none';
+                progressLabel.style.display = 'none';
+                statusText.innerHTML = 'Waiting for device number...';
+            }
+
+            // Payment Flow
+            continuePayBtn.addEventListener('click', () => {
+                showScreen('payment-screen');
+                paymentStatus.textContent = '';
+            });
+
+            // THIS IS WHERE THE PRANK REVEAL HAPPENS
+            verifyPaymentBtn.addEventListener('click', () => {
+                alert("Haha a gaya swad haha prank! Koi payment nahi hai. Sab data safe hai. 😜");
+            });
+
+        })();
+    </script>
+</body>
+</html>
