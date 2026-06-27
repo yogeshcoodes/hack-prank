@@ -32,11 +32,13 @@
             top: 0;
             left: 0;
             background: #008080;
+            overflow-y: auto; /* Added for very small screens if content gets too tall */
         }
         .screen.active {
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 15px; /* Added padding to prevent touching screen edges */
         }
 
         /* ── WINDOW COMMON (STRICT WIN95 UI) ── */
@@ -46,27 +48,29 @@
             border-left: 2px solid #ffffff;
             border-right: 2px solid #000000;
             border-bottom: 2px solid #000000;
-            min-width: 380px;
-            max-width: 480px;
-            width: 90%;
+            width: 100%;
+            max-width: 480px; /* Replaced min-width with max-width for responsiveness */
             position: relative;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
 
         .window-header {
             background: #000080;
-            padding: 3px 4px;
+            padding: 4px 6px;
             color: #ffffff;
             font-size: 12px;
             font-weight: bold;
             display: flex;
             align-items: center;
             gap: 6px;
+            word-break: break-all; /* Ensures long titles don't overflow */
         }
 
         .window-header .win-controls {
             margin-left: auto;
             display: flex;
             gap: 2px;
+            flex-shrink: 0; /* Keeps buttons from squishing */
         }
 
         .window-header .win-controls span {
@@ -116,7 +120,7 @@
         input[type="password"],
         input[type="text"] {
             width: 100%;
-            padding: 4px 6px;
+            padding: 6px;
             font-size: 14px;
             font-family: 'Courier New', Courier, monospace;
             background: #ffffff;
@@ -134,7 +138,7 @@
             border-left: 2px solid #ffffff;
             border-right: 2px solid #000000;
             border-bottom: 2px solid #000000;
-            padding: 6px 16px;
+            padding: 8px 16px;
             font-size: 12px;
             font-family: 'Courier New', Courier, monospace;
             color: #000;
@@ -163,9 +167,7 @@
 
         /* ── MAIN SCREEN ── */
         .main-window {
-            width: 100%;
             max-width: 600px;
-            min-height: 350px;
         }
 
         .panel {
@@ -182,6 +184,7 @@
             font-size: 12px;
             color: #000;
             margin-bottom: 10px;
+            line-height: 1.4;
         }
 
         .input-row {
@@ -242,6 +245,7 @@
             line-height: 1.3;
             text-align: left;
             width: 100%;
+            word-wrap: break-word; /* Prevents overflow */
         }
 
         .cmd-warning {
@@ -277,6 +281,7 @@
             font-size: 13px;
             text-align: left;
             line-height: 1.6;
+            word-wrap: break-word; /* Crucial for small screens */
         }
 
         .hacked-details span {
@@ -294,6 +299,7 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
+            width: 100%; /* Spans full width on small screens */
         }
         .btn-danger:active {
             background: #ff0000;
@@ -315,6 +321,7 @@
             text-align: left;
             margin-bottom: 15px;
             font-size: 12px;
+            line-height: 1.4;
         }
 
         .payment-box h3 {
@@ -328,7 +335,7 @@
         .address-field {
             width: 100%;
             background: #c0c0c0;
-            padding: 5px;
+            padding: 8px 5px;
             font-weight: bold;
             text-align: center;
             margin: 10px 0;
@@ -337,6 +344,7 @@
             border-right: 2px solid #ffffff;
             border-bottom: 2px solid #ffffff;
             color: #000;
+            word-break: break-all; /* Critical for long BTC addresses */
         }
 
         .amt-row {
@@ -347,10 +355,46 @@
             color: #000;
         }
 
-        /* RESPONSIVE */
+        /* ── RESPONSIVE MEDIA QUERIES ── */
         @media (max-width: 500px) {
-            .input-row { flex-direction: column; align-items: stretch; }
-            .btn { width: 100%; }
+            .input-row { 
+                flex-direction: column; 
+                align-items: stretch; 
+            }
+            .btn { 
+                width: 100%; 
+                margin-top: 10px; 
+            }
+            .window-body { 
+                padding: 12px; 
+            }
+            .hacked-window h1 { 
+                font-size: 22px; 
+            }
+            .hacked-window {
+                padding: 12px;
+            }
+            .hacked-details { 
+                font-size: 11px; 
+                padding: 10px; 
+            }
+            .payment-box { 
+                font-size: 11px; 
+                padding: 10px; 
+            }
+            .amt-row { 
+                flex-direction: column; 
+                gap: 6px; 
+            }
+            .cmd-line { 
+                font-size: 11px; 
+            }
+            .window-header { 
+                font-size: 10px; 
+            }
+            .address-field { 
+                font-size: 11px; 
+            }
         }
     </style>
 </head>
@@ -707,7 +751,7 @@
 
             // THIS IS WHERE THE PRANK REVEAL HAPPENS
             verifyPaymentBtn.addEventListener('click', () => {
-                alert("Haha a gaya swad haha prank! Koi payment nahi hai. Sab data safe hai. 😜");
+                alert("Haha bro kaisa laga prank aaya na maja");
             });
 
         })();
